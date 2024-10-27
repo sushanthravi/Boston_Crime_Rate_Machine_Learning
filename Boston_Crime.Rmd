@@ -1,0 +1,710 @@
+---
+title: "Homework Machine Learning"
+output:
+  pdf_document:
+    latex_engine: xelatex
+  html_document: default
+date: "2024-07-17"
+author: Sushanth Ravichandran (sr56925)
+---
+
+10.a This exercise involves the Boston housing data set.
+How many rows are in this data set? How many columns? What
+do the rows and columns represent?
+
+```{r echo=FALSE}
+library(MASS)
+library(tinytex)
+library(tidyverse)
+library(dplyr)
+library(lubridate)
+library(tree)
+library(MASS)
+library(readr)
+library(caret)
+library(rpart)
+library(rpart.plot)
+library(randomForest)
+dim(Boston)
+data(Boston)
+```
+There are 506 rows of towns and 14 columns of predictors. 
+
+(b) Make some pairwise scatterplots of the predictors (columns) in
+this data set. Describe your findings.
+
+```{r echo=FALSE}
+pairs(~crim+lstat+indus+tax+medv, data = Boston)
+```
+
+The findings are as follows:
+•	Lower status of the population percent has a negative linear relationship with median value of owner-occupied homes in $1000s.
+•	proportion of non-retail business acres per town is inversely proportional to the median value of owner-occupied homes in $1000s.
+•	median value of owner-occupied homes in $1000s has a positive linear relationship with lower status of the population (percent).
+
+
+
+(c) Are any of the predictors associated with per capita crime rate?
+If so, explain the relationship.
+
+```{r echo=FALSE}
+
+cor(Boston[-1],Boston$crim)
+
+```
+per capita crime rate by town has a negative linear relationship with medv, dis,rm, chas and black
+per capita crime rate by town has a strong positive linear relationship with indus, nox, rad, lstat and tax
+
+(d) Do any of the census tracts of Boston appear to have particularly
+high crime rates? Tax rates? Pupil-teacher ratios? Comment on
+the range of each predictor.
+```{r echo=FALSE}
+High.Crime = Boston[which(Boston$crim > mean(Boston$crim) + 2*sd(Boston$crim)),]
+print("The range, mean and sd of per capita crime rate by town is:")
+range(Boston$crim) ; mean(Boston$crim) ; sd(Boston$crim)
+
+High.Tax = Boston[which(Boston$tax > mean(Boston$tax) + 1*sd(Boston$tax)),]
+print("Range of full-value property-tax rate per $10,000.")
+range(Boston$tax)
+
+High.PT = Boston[which(Boston$ptratio > mean(Boston$ptratio) + 2*sd(Boston$ptratio)),]
+print("The range of pupil-teacher ratio by town")
+range(Boston$ptratio)
+```
+
+The crime rate varies widely, ranging from nearly zero to 89.There are some tracts with very high crime rates due to a major deviation from the mean.
+The full value property tax rate ranges from 187 to 711 which shows high parity.
+Fourteen suburbs have a property tax rate higher than one standard deviation above the mean.
+The pupil-teacher ratio ranges from 12.6 to 22, indicating no suburbs with a high teacher-to-pupil ratio.
+
+
+(e) How many of the census tracts in this data set bound the Charles
+river?
+```{r echo=FALSE}
+sum(Boston$chas)
+```
+35 census tracts in this data set bound the Charles river!
+
+(f) What is the median pupil-teacher ratio among the towns in this
+data set?
+
+```{r echo=FALSE}
+median(Boston$ptratio)
+```
+
+19.05 is the median pupil-teacher ratio
+
+(g) Which census tract of Boston has lowest median value of owner occupied homes? What are the values of the other predictors for that census tract, and how do those values compare to the overall ranges for those predictors? Comment on your findings.
+
+```{r echo=FALSE}
+a=which(Boston$medv == min(Boston$medv))
+print(a)
+
+Boston[c(399,406),]
+ranges <- apply(Boston, 2, range)
+print(ranges)
+
+```
+Census tracts 399 and 406 have least median house value. 
+There is a big difference in the criminal rates in the two suburbs
+Both pupil-teacher ratio and  lower status of the population (percent)  are close to their maximum values.
+
+(h) In this data set, how many of the census tracts average more than seven rooms per dwelling? More than eight rooms per dwelling? Comment on the census tracts that average more than eight rooms per dwelling.
+```{r echo=FALSE}
+sum(Boston$rm>7)
+sum(Boston$rm>8)
+
+```
+64 census tracts average more than 7 rooms per dwelling
+The number of census tracts with avg. no. of rooms >8 is 13.
+There are a lot of census tracts that average at ~8 rooms per dwelling due to the big delta between rm (>7 and >8) values.
+```{r echo=FALSE}
+print("Summary of Boston dataset")
+summary(Boston)
+
+print("Summary of Boston dataset with avg no. of rooms per dwelling> 8")
+summary(subset(Boston, rm > 8))
+```
+The crime rate mean is at 0.7 in tracts where (rm>8) compared to the overall mean of 3.6 which shows there is is a lesser rate of crimes in these dwellings
+
+The median house value is almost 2X in the (rm>8) compared to the overall dataset which shows that there are more expensive houses in these areas
+
+The lower status of the population (percent) is much lower in the tracts with avg. no. of rooms >8 which shows the proportion of rich in these tracts is higher
+
+
+2.)
+---
+Question 3
+15. This problem involves the Boston data set, which we saw in the lab
+for this chapter. We will now try to predict per capita crime rate
+using the other variables in this data set. In other words, per capita
+crime rate is the response, and the other variables are the predictors.
+---
+
+(a) For each predictor, fit a simple linear regression model to predict
+the response. Describe your results. In which of the models is
+there a statistically significant association between the predictor
+and the response? Create some plots to back up your assertions.
+
+```{r echo=FALSE}
+library(MASS)     
+library(ggplot2)  
+data("Boston")
+
+Boston$chas <- factor(Boston$chas, labels = c("N","Y"))
+summary(Boston)
+
+lm.indus = lm(crim~indus,data = Boston)
+summary(lm.indus)
+lm.chas = lm(crim~chas, data = Boston) 
+summary(lm.chas)
+lm.nox = lm(crim~nox,data = Boston)
+summary(lm.nox)
+lm.rm = lm(crim~rm,data = Boston)
+summary(lm.rm)
+lm.dis = lm(crim~dis, data = Boston)
+summary(lm.dis)
+lm.rad = lm(crim~rad, data = Boston)
+summary(lm.rad)
+lm.black = lm(crim~black, data = Boston)
+summary(lm.black)
+lm.lstat = lm(crim~lstat, data = Boston)
+summary(lm.lstat)
+lm.medv = lm(crim~medv,data = Boston)
+summary(lm.medv)
+
+plot(Boston$medv, Boston$crim  )
+abline(lm.medv)
+
+plot(Boston$lstat,Boston$crim )
+abline(lm.lstat)
+
+plot(Boston$nox, Boston$crim )
+abline(lm.nox)
+```
+The linear regressions of per capita crime rate by town has been drawn against all other predictorss to find any linear relationship between these predictors
+
+
+
+Based on the results, except for chas(tracts that bound the Charles river) all other predictors variables have an effect on predicting the per capita crime rate by town.
+
+Criminal rate is inversely proportional to the median value of owner-occupied homes 
+Criminal rate is directly proportional to lower status of the population (percent) 
+These two are indicators that there are higher chances of crime in poorer neighbourhoods.
+
+
+(b) Fit a multiple regression model to predict the response using
+all of the predictors. Describe your results. For which predictors
+can we reject the null hypothesis H0 : βj = 0
+```{r echo=FALSE}
+model <- lm(crim ~ ., data = Boston)
+summary_model <- summary(model)
+print(summary_model)
+```
+dis, rad, medv, black & zn have the least p value (<0.05) as a result of which null hypothesis can be rejected (Rejecting the null hypothesis implies that these independent variables significantly contributes to the model in explaining the variance in the dependent variable(criminal rate)).
+
+The results are different from simple regression since other variables are ignored in simple linear regression.
+
+
+(c) How do your results from (a) compare to your results from (b)?
+Create a plot displaying the univariate regression coefficients
+from (a) on the x-axis, and the multiple regression coefficients
+from (b) on the y-axis. That is, each predictor is displayed as a
+single point in the plot. Its coefficient in a simple linear regression
+model is shown on the x-axis, and its coefficient estimate
+in the multiple linear regression model is shown on the y-axis
+
+```{r echo=FALSE}
+univariate_coeffs <- sapply(names(Boston)[-14], function(var) {
+  model <- lm(medv ~ get(var), data = Boston)
+  coef(model)[2]
+})
+
+multiple_model <- lm(medv ~ ., data = Boston)
+multiple_coeffs <- coef(multiple_model)[-1]  # Exclude the intercept
+
+plot(univariate_coeffs, multiple_coeffs, 
+     xlab = "Univariate Regression Coefficients", 
+     ylab = "Multiple Regression Coefficients",
+     main = "Comparison of Univariate and Multiple Regression Coefficients",
+     pch = 19)
+
+text(univariate_coeffs, multiple_coeffs, labels = names(Boston)[-14], pos = 4)
+```
+The coefficients have  changed while performing multiple linear regression as compared to single linear regression which shows that there is some form of pair wise interaction comes into play during multiple linear regression which affects the coeff.
+
+
+(d) Is there evidence of non-linear association between any of the
+predictors and the response? To answer this question, for each
+predictor X, fit a model of the form
+Y = β0 + β1X + β2X2 + β3X3 + ϵ.
+
+```{r echo=FALSE}
+lm.zn = lm(crim~poly(zn,3),data = Boston)
+summary(lm.zn) 
+lm.indus = lm(crim~poly(indus,3),data = Boston)
+summary(lm.indus)
+lm.nox = lm(crim~poly(nox,3),data = Boston)
+summary(lm.nox) 
+lm.rm = lm(crim~poly(rm,3), data=Boston)
+summary(lm.rm)
+lm.age = lm(crim~poly(age,3), data=Boston)
+summary(lm.age)
+lm.dis = lm(crim~poly(dis,3), data=Boston)
+summary(lm.dis)
+lm.rad = lm(crim~poly(rad,3), data = Boston)
+summary(lm.rad)
+lm.tax = lm(crim~poly(tax,3), data=Boston)
+summary(lm.tax)
+lm.ptratio = lm(crim~poly(ptratio,3), data = Boston)
+summary(lm.ptratio)
+lm.black = lm(crim~poly(black,3), data = Boston)
+summary(lm.black)
+lm.lstat = lm(crim~poly(lstat,3),data = Boston)
+summary(lm.lstat)
+lm.medv = lm(crim~poly(medv,3), data=Boston)
+summary(lm.medv) 
+```
+Most predictors show evidence of a non-linear relationship (either quadratic or cubic) with the response variable, except for black (Bk, the proportion of blacks by town), which only shows a strong linear relationship.
+
+The squared term (degree 2) is significant for most predictors, including zn, indus, nox, rm, age, dis, rad, tax, ptratio, lstat, and medv, suggesting a non-linear (parabolic) relationship for these variables.
+
+For predictors such as indus, nox, age, dis, tax, ptratio, and medv, the third-order polynomial terms are significant, indicating a more complex non-linear relationship with the response variable (crime rate).
+
+
+
+
+
+3. Shrinkage and selection in linear models: Chapter 6: #11
+
+11. We will now try to predict per capita crime rate in the Boston data
+set.
+(a) Try out some of the regression methods explored in this chapter,
+such as best subset selection, the lasso, ridge regression, and
+PCR. Present and discuss results for the approaches that you
+consider.
+
+
+```{r echo=FALSE}
+set.seed(1)
+library(MASS)
+library(leaps)
+library(glmnet)
+
+```
+Best subset selection
+```{r echo=FALSE}
+
+predict.regsubsets = function(object, newdata, id, ...) {
+    form = as.formula(object$call[[2]])
+    mat = model.matrix(form, newdata)
+    coefi = coef(object, id = id)
+    mat[, names(coefi)] %*% coefi
+}
+
+k = 10
+p = ncol(Boston) - 1
+folds = sample(rep(1:k, length = nrow(Boston)))
+cv.errors = matrix(NA, k, p)
+for (i in 1:k) {
+    best.fit = regsubsets(crim ~ ., data = Boston[folds != i, ], nvmax = p)
+    for (j in 1:p) {
+        pred = predict(best.fit, Boston[folds == i, ], id = j)
+        cv.errors[i, j] = mean((Boston$crim[folds == i] - pred)^2)
+    }
+}
+rmse.cv = sqrt(apply(cv.errors, 2, mean))
+plot(rmse.cv, pch = 15, type = "b")
+
+```
+
+```{r echo=FALSE}
+rmse.cv[which.min(rmse.cv)]
+
+```
+
+Lasso
+```{r echo=FALSE}
+x = model.matrix(crim ~ . - 1, data = Boston)
+y = Boston$crim
+cv.lasso = cv.glmnet(x, y, type.measure = "mse")
+plot(cv.lasso)
+```
+
+```{r echo=FALSE}
+
+
+print("The RMSE is ")
+sqrt(cv.lasso$cvm[cv.lasso$lambda == cv.lasso$lambda.1se])
+
+```
+
+Ridge Regression
+
+```{r echo=FALSE}
+x = model.matrix(crim ~ . - 1, data = Boston)
+y = Boston$crim
+cv.ridge = cv.glmnet(x, y, type.measure = "mse", alpha = 0)
+plot(cv.ridge)
+```
+```{r echo=FALSE}
+coef(cv.ridge)
+
+print("The RMSE is ")
+sqrt(cv.ridge$cvm[cv.ridge$lambda == cv.ridge$lambda.1se])
+
+```
+  PCR
+  
+```{r echo=FALSE}
+library(pls)
+pcr.fit = pcr(crim ~ ., data = Boston, scale = TRUE, validation = "CV")
+
+summary(pcr.fit)
+
+validationplot(pcr.fit , val.type = "MSEP")
+
+
+
+```
+```{r echo=FALSE}
+
+pcr.fit <- pcr(crim ~ ., data = Boston  , scale = TRUE , validation = "CV")
+validationplot(pcr.fit , val.type = "MSEP")
+
+
+```
+
+
+Propose a model (or set of models) that seem to perform well on
+this data set, and justify your answer. Make sure that you are
+evaluating model performance using validation set error, cross validation,
+or some other reasonable alternative, as opposed to
+using training error.
+
+(c) Does your chosen model involve all of the features in the data
+set? Why or why not?
+
+
+b)Both the ridge and lasso model provide comparable RMSE results. The ridge model is better when we want to retian all predictors but in this case from our subset selection we have found that 9 predictors are optimal. Therefore Lasso regression is preferable when you believe that only a subset of predictors is relevant and you want to perform variable selection. It can produce simpler and more interpretable models by setting some coefficients to zero.
+
+Interpretability: Lasso models are typically more interpretable compared to other methods because they perform variable selection, resulting in a simpler, more understandable model.
+
+c.)No the chosen Lasso model results in a sparse model, including only 9 variables. This means that it excludes less influential variables, which simplifies the model and focuses on the most significant predictors.
+
+
+
+Regression Trees: Chapter 8: #8 BUT: Use the Austin housing data posted to the
+course website (austinhousing.csv) instead of the dataset in the book. Use the following
+variables to generate predictions for log(latestPrice): latitude, longitude,
+hasAssociation, livingAreaSqFt, numOfBathrooms, numOfBedrooms. (See the
+description of the dataset in the individual prediciton project assignment.) When
+reporting your prediction errors, report them in terms of prices (not log prices).
+
+(a) Split the data set into a training set and a test set.
+
+```{r echo=FALSE}
+library(caret)
+df <- read.csv("C:/Users/Lenovo/Downloads/Intro to Machine Learning/Takehome problems/austinhouses.csv")
+head(df)
+set.seed(18)
+df$log_latestPrice <- log(df$latestPrice)
+
+df$hasAssociation <- as.factor(df$hasAssociation)
+
+# Hold out 20% of the data as a final validation set
+train_ix = createDataPartition(df$latestPrice,
+                               p = 0.8)
+
+
+
+austin_train = df[train_ix$Resample1,]
+austin_test  = df[-train_ix$Resample1,]
+
+print("The Dimensions of the train and test set are:")
+dim(austin_train)
+dim(austin_test)
+```
+Fit a regression tree to the training set. Plot the tree, and interpret
+the results. What test MSE do you obtain?
+
+```{r echo=FALSE}
+
+kcv = 10
+
+
+cv_folds = createFolds(austin_train$latestPrice,
+                               k = kcv)
+
+
+fit_control <- trainControl(
+  method = "cv",
+  indexOut = cv_folds,
+  selectionFunction="oneSE")
+set.seed(18)
+
+rpart_grid = data.frame(cp = c(0, exp(seq(log(0.00001), log(0.03), length.out=500))))
+model <- train( log_latestPrice ~latitude + longitude + hasAssociation + livingAreaSqFt + numOfBathrooms + numOfBedrooms , data = austin_train, 
+                          method = "rpart", 
+                          tuneGrid = rpart_grid,
+                          trControl = fit_control)
+
+rpart.plot(model$finalModel)
+
+predictions_log <- predict(model, newdata = austin_test)
+
+predictions <- exp(predictions_log)
+  
+testMSE <- mean((predictions - austin_test$latestPrice)^2)
+
+print("Test MSE is ")
+testMSE  
+sqrt(testMSE)
+```
+
+
+c.) Use cross-validation in order to determine the optimal level of
+tree complexity. Does pruning the tree improve the test MSE?
+```{r echo=FALSE}
+set.seed(18)
+bigtree = rpart(log_latestPrice ~ latitude + longitude + hasAssociation + livingAreaSqFt + numOfBathrooms + numOfBedrooms, data = austin_train,
+                control = rpart.control(cp=0.0009, minsplit=5))
+plotcp(bigtree)
+printcp(bigtree)
+best_cp_ix = which.min(bigtree$cptable[,4]) # "Best"
+bigtree$cptable[best_cp_ix,4]
+
+# one sd rule
+tol = bigtree$cptable[best_cp_ix,4] + bigtree$cptable[best_cp_ix,5]
+bigtree$cptable[bigtree$cptable[,4]<tol,][1,]
+best_cp_onesd = bigtree$cptable[bigtree$cptable[,4]<tol,][1,1]
+cvtree = prune(bigtree, cp=best_cp_onesd)
+
+rpart.plot(cvtree)
+
+predictions_log <- predict(cvtree, newdata = austin_test)
+
+predictions <- exp(predictions_log)
+  
+testMSE <- mean((predictions - austin_test$latestPrice)^2)
+
+print("Test MSE with pruned tree is ")
+testMSE
+sqrt(testMSE)
+```
+It does not seem like pruning the tree helps reduce the RMSE
+
+
+d.) Use the bagging approach in order to analyze this data. What
+test MSE do you obtain? Use the importance() function to determine
+which variables are most important
+```{r echo=FALSE}
+bagging_model <- randomForest(log_latestPrice ~ latitude + longitude + hasAssociation + livingAreaSqFt + numOfBathrooms + numOfBedrooms, data = austin_train, ntree = 500, importance = TRUE)
+bagging_predictions_log <- predict(bagging_model, newdata = austin_test)
+bagging_predictions <- exp(bagging_predictions_log)
+bagging_testMSE <- mean((bagging_predictions - austin_test$latestPrice)^2)
+cat("Test MSE (Bagging):", bagging_testMSE, "\n")
+
+
+variable_importance <- importance(bagging_model)
+print(variable_importance)
+
+varImpPlot(bagging_model)
+
+```
+e.) Use random forests to analyze this data. What test MSE do you obtain? Use the importance() function to determine which variables are most important. Describe the effect of m, the number of variables considered at each split, on the error rate obtained.
+```{r echo=FALSE}
+rf_fit <- train( log_latestPrice ~latitude + longitude + hasAssociation + livingAreaSqFt + numOfBathrooms + numOfBedrooms , data = austin_train, 
+                 method = "rf", 
+                 trControl = fit_control,
+                 ntree = 50)
+
+rf_grid = data.frame(mtry = c(1,2,3,4,5,6))
+rf_fit <- train( log_latestPrice ~latitude + longitude + hasAssociation + livingAreaSqFt + numOfBathrooms + numOfBedrooms , data = austin_train, 
+                 method = "rf", 
+                 trControl = fit_control,
+                 tuneGrid = rf_grid,
+                 ntree = 150)
+
+# Getting a plot of CV error estimates
+ggplot(rf_fit)
+
+# Adding +/- one se
+
+best = rf_fit$results[which.min(rf_fit$results$RMSE),]
+onesd = best$RMSE + best$RMSESD/sqrt(kcv)
+
+ggplot(rf_fit) + 
+  geom_segment(aes(x=mtry, 
+                   xend=mtry, 
+                   y=RMSE-RMSESD/sqrt(kcv), 
+                   yend=RMSE+RMSESD/sqrt(kcv)), 
+               data=rf_fit$results) + 
+  geom_hline(yintercept = onesd, linetype='dotted')
+
+### Variable importance
+
+# From caret, for methods that support it
+imp = varImp(rf_fit, scale=TRUE)
+
+# Recreating the randomForest importance plot by hand
+plot_df = data.frame(variable=rownames(imp$importance),
+                     rel_importance = imp$importance$Overall)
+ggplot(aes(x=reorder(variable, rel_importance), 
+           y=rel_importance), data=plot_df) + 
+  geom_point() + 
+  ylab("Relative importance (RF)") + 
+  xlab("Variable") + 
+  coord_flip()
+
+# Same as from the randomForest package directly!
+varImp(rf_fit$finalModel, scale=FALSE)
+varImpPlot(rf_fit$finalModel)
+
+predictions_log <- predict(rf_fit, newdata = austin_test)
+
+predictions <- exp(predictions_log)
+  
+testMSE <- mean((predictions - austin_test$latestPrice)^2)
+
+print("Test MSE with the best RRandom Forest model is ")
+testMSE
+sqrt(testMSE)
+```
+
+The OOB error rate is least at mtry =6 and therefore that is our ideal mtry value. If we take the one SE rule into consideration then the mtry=3 will be picked.
+
+(f) Now analyze the data using BART, and report your results.
+
+```{r echo=FALSE}
+library(BART)
+
+austin_train$log_latestPrice <- log(austin_train$latestPrice)
+austin_test$log_latestPrice <- log(austin_test$latestPrice)
+
+#Prepare the data for BART
+x_train <- austin_train[, c("latitude", "longitude", "hasAssociation", "livingAreaSqFt", "numOfBathrooms", "numOfBedrooms")]
+x_test <- austin_test[, c("latitude", "longitude", "hasAssociation", "livingAreaSqFt", "numOfBathrooms", "numOfBedrooms")]
+y_train <- austin_train$log_latestPrice
+y_test <- austin_test$log_latestPrice
+
+bart_model <- gbart(x.train = x_train, y.train = y_train, x.test = x_test)
+
+# Make predictions on the test set (using the median of the posterior samples)
+bart_predictions_log <- apply(bart_model$yhat.test, 2, median)
+
+# Convert predictions back to original scale
+bart_predictions <- exp(bart_predictions_log)
+
+bart_testMSE <- mean((bart_predictions - austin_test$latestPrice)^2)
+
+cat("Test MSE (BART):", bart_testMSE, "\n")
+
+# Variable importance is not directly available in BART like in Random Forests, 
+# but we can check the splitting rules to get some insights.
+summary(bart_model)
+```
+The least MSE is obtained using the BART model!
+
+5. Classification (Trees and Logistic regression): Chapter 8: #11; in part c) use logistic
+regression.
+This question uses the Caravan data set.
+
+(a) Create a training set consisting of the first 1,000 observations,
+and a test set consisting of the remaining observations
+
+(b)Fit a boosting model to the training set with Purchase as the
+response and the other variables as predictors. Use 1,000 trees,
+and a shrinkage value of 0.01. Which predictors appear to be
+the most important?
+
+```{r echo=FALSE}
+library(ISLR)
+library(gbm)
+data(Caravan)
+
+Caravan$Purchase = ifelse(Caravan$Purchase == "Yes", 1, 0)
+
+train_set <- Caravan[1:1000, ]
+test_set <- Caravan[1001:nrow(Caravan), ]
+
+print("The dimensions of training and test set are as follows:")
+dim(train_set)
+dim(test_set)
+
+response <- train_set$Purchase
+predictors <- train_set[, -ncol(train_set)]
+
+set.seed(18)
+boost.caravan = gbm(Purchase ~ ., data = train_set, n.trees = 1000, shrinkage = 0.01, 
+    distribution = "bernoulli")
+  
+print(boost.caravan)
+summary(boost.caravan)
+```
+PPERSAUT, MKOOPKLA, MOPLHOOG, and MBERMIDD are the most important predictors.
+
+
+c.)Use the logistic regression model to predict the response on the test data.
+Predict that a person will make a purchase if the estimated probability
+of purchase is greater than 20%. Form a confusion matrix.
+What fraction of the people predicted to make a purchase
+do in fact make one?
+```{r echo=FALSE}
+# Load necessary libraries
+library(ISLR)
+library(caret)
+library(glmnet)
+
+# Load the Caravan dataset
+data(Caravan)
+
+# Convert Purchase to a binary numeric variable
+Caravan$Purchase <- ifelse(Caravan$Purchase == "Yes", 1, 0)
+
+# Standardize the predictor variables
+Caravan_scaled <- as.data.frame(scale(Caravan[, -86])) # Exclude Purchase column
+Caravan_scaled$Purchase <- Caravan$Purchase
+
+# Split the data into training (80%) and test sets (20%)
+set.seed(123)
+trainIndex <- createDataPartition(Caravan_scaled$Purchase, p = 0.8, list = FALSE)
+trainSet <- Caravan_scaled[trainIndex, ]
+testSet <- Caravan_scaled[-trainIndex, ]
+
+# Prepare the data for glmnet
+x_train <- as.matrix(trainSet[, -ncol(trainSet)])
+y_train <- trainSet$Purchase
+x_test <- as.matrix(testSet[, -ncol(testSet)])
+y_test <- testSet$Purchase
+
+# Fit the logistic regression model using ridge regression
+set.seed(123)
+logit_model <- cv.glmnet(x_train, y_train, alpha = 0, family = "binomial")
+
+# Predict the probability of purchase on the test data
+test_probabilities <- predict(logit_model, s = "lambda.min", newx = x_test, type = "response")
+
+# Predict purchase based on a threshold of 20%
+threshold <- 0.20
+test_predictions <- ifelse(test_probabilities > threshold, 1, 0)
+
+# Create a confusion matrix
+conf_matrix <- table(Predicted = test_predictions, Actual = y_test)
+
+# Print the confusion matrix
+print(conf_matrix)
+
+# Calculate the fraction of people predicted to make a purchase who actually make one
+predicted_positive <- conf_matrix[2, 2] + conf_matrix[2, 1]
+actual_positive <- conf_matrix[2, 2]
+fraction_actual_positive <- actual_positive / predicted_positive
+
+# Print the fraction
+cat("Fraction of people predicted to make a purchase who actually make one:", fraction_actual_positive, "\n")
+
+```
+
+
+
+  
